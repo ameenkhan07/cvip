@@ -25,8 +25,15 @@ class ScaleSpace:
         self.sigma = 1/math.sqrt(2)
         self.k = math.sqrt(2)
         self.gauss_pyramid = [] # array of all octaves
-        self.dog = [[]] # array of all DoGs of all octaves
+        self.dog = [] # array of all DoGs of all octaves
         self.img = cv2.imread("./task2.jpg", 0)
+
+    def _show_img(self, img, name = 'IMAGE'):
+        """Utility Function to cv2 show images
+        """
+        cv2.imshow(name,np.asarray(img))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def _scale_space(self, SIG, img):
         """Returns a list of image arrays for a single octave
@@ -41,30 +48,23 @@ class ScaleSpace:
         
         # temp = signal.convolve2d(img,_gaussian_kernel(SIG))
 
-        # cv2.imshow('IMAGE',np.asarray(img))
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
         octave_list = []
         for s in sig:
             temp = scipy.ndimage.filters.gaussian_filter(img, s)
             octave_list.append(temp)
-            cv2.imshow('Temp',np.asarray(temp))
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            # self._show_img(temp)
+
         return octave_list
 
     def _create_gauss_pyramid(self):
         """Generates gaussian images for 4 octaves
         """
-        # SIG = 1/math.sqrt(2)
         SIG = [1/math.sqrt(2), math.sqrt(2), 2*math.sqrt(2), 4*math.sqrt(2)]
 
-        # oct_img = [self.img] # List of all images sampled
+         # List of all sampled images
         oct_img = self._sample_img(self.img)
-        # im = self.img[::2, ::2]
-        # self._scale_space(math.sqrt(2), im)
         for ele in zip(SIG, oct_img):
-            print(ele[0], ele[1].shape)
+            # print(ele[0], ele[1].shape)
             octave = self._scale_space(ele[0], ele[1])
             self.gauss_pyramid.append(octave)
         
@@ -80,15 +80,14 @@ class ScaleSpace:
             oct_img.append(oct_img[-1][::2, ::2])
         return oct_img
 
-    def _diff_of_gauss(self):
+    def _create_diff_of_gauss(self):
         """Creates complete DoG for all octaves
         """
-        pass
+        for oct in self.gauss_pyramid:
+            self.dog.append([y-x for x, y in zip(oct, oct[1:])])
+
+
 
 s = ScaleSpace()
 s._create_gauss_pyramid()
-
-# Scale Space (Gaussian Pyramid)
-
-
-# Difference of Gaussian
+s._create_diff_of_gauss()
