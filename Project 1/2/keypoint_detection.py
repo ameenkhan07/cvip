@@ -92,6 +92,10 @@ class ScaleSpace:
         for i in self.dog:
             for im in i:
                 self._show_img(im)
+        for i, octave in enumerate(self.dog):
+            for im, scale in enumerate(octave):
+                cv2.imwrite("DOG_"+str(i)+"_"+str(im)+".png", np.asarray(scale, dtype = np.uint8))
+                # self._show_img(im)
 
 
 s = ScaleSpace()
