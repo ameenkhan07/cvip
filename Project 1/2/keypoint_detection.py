@@ -27,6 +27,7 @@ class ScaleSpace:
         self.k = math.sqrt(2)
         self.gauss_pyramid = []  # array of all octaves
         self.dog = []  # array of all DoGs of all octaves
+        self.dog_extrema = [4*[]]
         self.img = cv2.imread("./task2.jpg", 0)
 
     def _show_img(self, img, name='IMAGE'):
@@ -89,15 +90,36 @@ class ScaleSpace:
         for oct in self.gauss_pyramid:
             self.dog.append([y - x for x, y in zip(oct, oct[1:])])
 
-        for i in self.dog:
-            for im in i:
-                self._show_img(im)
         for i, octave in enumerate(self.dog):
             for im, scale in enumerate(octave):
                 cv2.imwrite("DOG_"+str(i)+"_"+str(im)+".png", np.asarray(scale, dtype = np.uint8))
                 # self._show_img(im)
 
+    def _detect_keypoints(self):
+        """
+        """
+        # first_octave = self.dog[0]
+        for o, octave in enumerate(self.dog):
+            for s, scale in enumerate(octave):
+                if s in [1,2]:
+                    DX, DY = scale.shape[0], scale.shape[1]
+                    temp = [[0 for _ in range(DY)] for _ in range(DX)]
+                    # print(len(temp))
+                    # print(len(temp[1]))
+                    # print(scale.shape, DX, DY)
+                    for x, row in enumerate(octave[s], start=0):
+                        for y, col in enumerate(row, start=0):
+                            # print(row, "X")
+                            neighborhood = get_neigborhood(x,y, scale, octave[s-1], octave[s+1])
+                            if col<min(neighborhood) or col > max(neighborhood):
+                                temp[x][y] = 255
+                    # self._show_img(scale)
+                    self.dog_extrema[0].append(temp)
+                    cv2.imwrite("Extrema_"+str(o)+"_"+str(s)+".png", np.asarray(temp, dtype = np.uint8))
+                    # self._show_img(np.asarray(temp, dtype = np.uint8))
+
 
 s = ScaleSpace()
 s._create_gauss_pyramid()
 s._create_diff_of_gauss()
+s._detect_keypoints()
