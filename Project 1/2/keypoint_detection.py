@@ -1,20 +1,11 @@
-# Keypoint Detection
-# Detect keypoints in an image according to the following steps, which are also the first three steps of Scale-Invariant Feature Transform (SIFT).
-# 1.  Generate four octaves.  Each octave is composed of five images blurred using Gaussian kernels.  For each octave, the bandwidth parameters σ(five different scales) of the Gaussian kernels are shown in Tab.  1.
-# 2.  Compute Difference of Gaussian (DoG) for all four octaves.
-# 3.  Detect keypoints which are located at the maxima or minima of the DoG images.  You only need to provide pixel-level locations of the keypoints; you do not need to provide sub-pixel-level locations.
-
-# In your report, please
-# (1) include images of the second and third octave and specify their resolution (width×height, unit pixel);
-# (2) include DoG images obtained using the second and third octave;
-# (3) clearly show all the detected keypoints using white dots on the original image
-# (4) provide coordinates of the five left-most detectedkeypoints (the origin is set to be the top-left corner).
-
 import cv2
 import math
+import os
 import numpy as np
-import scipy.ndimage
+# import scipy.ndimage
+
 from utils import *
+from gaussian_kernel import *
 
 OUTPUT_DIR = "outputs/"
 if not os.path.exists(OUTPUT_DIR):
@@ -57,7 +48,11 @@ class ScaleSpace:
 
         octave_list = []
         for s in sig:
-            temp = scipy.ndimage.filters.gaussian_filter(img, s)
+            # For Comparing Gaussian Kernel filtered image
+            # temp = scipy.ndimage.filters.gaussian_filter(img, s)
+            g = Gaussian(s)
+            temp = g._gaussian_filter(img)
+
             octave_list.append(temp)
             # self._show_img(temp)
 
@@ -113,6 +108,7 @@ class ScaleSpace:
                 if s in [1, 2]:
                     DX, DY = scale.shape[0], scale.shape[1]
                     temp = [[0 for _ in range(DY)] for _ in range(DX)]
+                    # counter = 0
                     for x, row in enumerate(octave[s], start=0):
                         for y, col in enumerate(row, start=0):
                             neighborhood = get_neigborhood(
@@ -120,7 +116,9 @@ class ScaleSpace:
                             if col < min(neighborhood) or col > max(
                                     neighborhood):
                                 temp[x][y] = 255
+                                # counter+=1
                     extremas_.append(temp)
+                    # print("Extrema_" + str(o + 1) + "_"+str(counter))
                     name = "Extrema_" + str(o + 1) + "_" + str(s + 1) + ".png"
                     cv2.imwrite(
                         os.path.join(OUTPUT_DIR, name),
