@@ -70,7 +70,7 @@ def _draw_match_keypoints(*args):
     return(good_matches)
 
 
-def _get_homography_matrix(good_matches, keypoint_1, keypoint_2, _H = True):
+def _get_homography_matrix(good_matches, keypoint_1, keypoint_2, _H=True):
     """Homography matrix H (with RANSAC) from the image 1 to image 2
     """
     source = np.float32(
@@ -82,7 +82,7 @@ def _get_homography_matrix(good_matches, keypoint_1, keypoint_2, _H = True):
     if _H:
         print("Homography Matrix  : ")
         print(H)
-    return(mask)
+    return(mask, H)
 
 
 def _draw_inlier_match_keypoints(img1_g, keypoint_1, img2_g, keypoint_2, good_matches, mask):
@@ -90,7 +90,8 @@ def _draw_inlier_match_keypoints(img1_g, keypoint_1, img2_g, keypoint_2, good_ma
     TODO : Check if good_matches in this case is just inliers or both inliers and outliers
     """
     good_matches = random.sample(good_matches, 10)
-    mask = _get_homography_matrix(good_matches, keypoint_1, keypoint_2, _H = False)
+    mask, _ = _get_homography_matrix(
+        good_matches, keypoint_1, keypoint_2, _H=False)
     matchesMask = mask.ravel().tolist()
     # matchesMask = matchesMask[:10]
     draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
@@ -98,10 +99,50 @@ def _draw_inlier_match_keypoints(img1_g, keypoint_1, img2_g, keypoint_2, good_ma
                        matchesMask=matchesMask,  # draw only inliers
                        flags=2)
     # print(len(matchesMask))
-    good_matches = [i[0] for i in good_matches] # Get the elements inside of list elements
+    # Get the elements inside of list elements
+    good_matches = [i[0] for i in good_matches]
     img3 = cv.drawMatches(img1_g, keypoint_1, img2_g,
                           keypoint_2, good_matches, None, **draw_params)
     _save('task1_matches.jpg', img3)
+
+
+def _get_stitched_image(img1, img2, H_Matrix):
+    """
+    """
+
+    # Get width and height of input images
+    width1, height1 = img1.shape
+    width2, height2 = img2.shape
+
+    # Get the canvas dimesions
+    img1_dims = np.float32(
+        [[0, 0], [0, width1], [height1, width1], [height1, 0]]).reshape(-1, 1, 2)
+    img2_dims = np.float32(
+        [[0, 0], [0, width2], [height2, width2], [height2, 0]]).reshape(-1, 1, 2)
+
+    # Get relative perspective of second image
+    img2_dims = cv.perspectiveTransform(img2_dims, H_Matrix)
+
+    # Resulting dimensions
+    result_dims = np.concatenate((img1_dims, img2_dims), axis=0)
+
+    # Getting images together
+    # Calculate dimensions of match points
+    [x_min, y_min] = np.int32(result_dims.min(axis=0).ravel() - 0.5)
+    [x_max, y_max] = np.int32(result_dims.max(axis=0).ravel() + 0.5)
+
+    # Create output array after affine transformation
+    transform_dist = [-x_min, -y_min]
+    transform_array = np.array([[1, 0, transform_dist[0]],
+                                [0, 1, transform_dist[1]],
+                                [0, 0, 1]])
+
+    # Warp images to get the resulting image
+    result_img = cv.warpPerspective(img2, transform_array.dot(H_Matrix),
+                                    (x_max-x_min, y_max-y_min))
+    result_img[transform_dist[1]:width1+transform_dist[1],
+               transform_dist[0]:height1+transform_dist[0]] = img1
+    _save('task1_pano.jpg', result_img)
 
 
 if __name__ == '__main__':
@@ -120,8 +161,12 @@ if __name__ == '__main__':
                                          img2_g, keypoint_2, descriptor_2)
 
     # Part 3
-    mask = _get_homography_matrix(good_matches, keypoint_1, keypoint_2)
+    mask, H_Matrix = _get_homography_matrix(
+        good_matches, keypoint_1, keypoint_2)
 
     # Part 4
     _draw_inlier_match_keypoints(
         img1_g, keypoint_1, img2_g, keypoint_2, good_matches, mask)
+
+    # Part 5
+    _get_stitched_image(img2_g, img1_g, H_Matrix)
