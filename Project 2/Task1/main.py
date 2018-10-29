@@ -1,9 +1,11 @@
 import os
 import cv2 as cv
 import numpy as np
+from matplotlib import pyplot as plt
+import random
 
 UBIT = 'ameenmoh'
-_random = np.random.seed(sum([ord(c) for c in UBIT]))
+np.random.seed(sum([ord(c) for c in UBIT]))
 
 OUTPUT_DIR = "outputs/"
 img1_name = "./mountain1.jpg"
@@ -40,7 +42,7 @@ def _extract_SIFT_keypoints(sift_obj, img1, img2, img1_g, img2_g):
     return(keypoint_1, descriptor_1, keypoint_2, descriptor_2)
 
 
-def _match_keypoints(*args):
+def _draw_match_keypoints(*args):
     """Draw match image for all matches
     Keypoint matching using k-nearest neighbour
     """
@@ -57,16 +59,15 @@ def _match_keypoints(*args):
     for m, n in matches:
         if m.distance < 0.75*n.distance:
             good_matches.append([m])
-
     # cv2.drawMatchesKnn expects list of lists as matches.
     img3 = cv.drawMatchesKnn(img1_g, keypoint_1, img2_g,
                              keypoint_2, good_matches, None, flags=2)
-    _save('task1 matches knn.jpg', img3)
+    _save('task1_matches_knn.jpg', img3)
 
     return(good_matches)
 
 
-def _get_homography_matrix(good_matches, keypoint_1, keypoint_2):
+def _get_homography_matrix(good_matches, keypoint_1, keypoint_2, _H = True):
     """Homography matrix H (with RANSAC) from the image 1 to image 2
     """
     source = np.float32(
@@ -74,9 +75,30 @@ def _get_homography_matrix(good_matches, keypoint_1, keypoint_2):
     dest = np.float32(
         [keypoint_2[m[0].trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
 
-    H, _ = cv.findHomography(source, dest, cv.RANSAC, 5.0)
-    print("Homography Matrix  : ")
-    print(H)
+    H, mask = cv.findHomography(source, dest, cv.RANSAC, 5.0)
+    if _H:
+        print("Homography Matrix  : ")
+        print(H)
+    return(mask)
+
+
+def _draw_inlier_match_keypoints(img1_g, keypoint_1, img2_g, keypoint_2, good_matches, mask):
+    """Draw match image for  10 random matches using only inliers.
+    TODO : Check if good_matches in this case is just inliers or both inliers and outliers
+    """
+    good_matches = random.sample(good_matches, 10)
+    mask = _get_homography_matrix(good_matches, keypoint_1, keypoint_2, _H = False)
+    matchesMask = mask.ravel().tolist()
+    # matchesMask = matchesMask[:10]
+    draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
+                       singlePointColor=None,
+                       matchesMask=matchesMask,  # draw only inliers
+                       flags=2)
+    # print(len(matchesMask))
+    good_matches = [i[0] for i in good_matches] # Get the elements inside of list elements
+    img3 = cv.drawMatches(img1_g, keypoint_1, img2_g,
+                          keypoint_2, good_matches, None, **draw_params)
+    _save('task1_matches.jpg', img3)
 
 
 if __name__ == '__main__':
@@ -91,8 +113,12 @@ if __name__ == '__main__':
         sift_obj, img1, img2, img1_g, img2_g)
 
     # Part 2
-    good_matches = _match_keypoints(sift_obj, img1_g, keypoint_1, descriptor_1,
-                                    img2_g, keypoint_2, descriptor_2)
+    good_matches = _draw_match_keypoints(sift_obj, img1_g, keypoint_1, descriptor_1,
+                                         img2_g, keypoint_2, descriptor_2)
 
     # Part 3
-    _get_homography_matrix(good_matches, keypoint_1, keypoint_2)
+    mask = _get_homography_matrix(good_matches, keypoint_1, keypoint_2)
+
+    # Part 4
+    _draw_inlier_match_keypoints(
+        img1_g, keypoint_1, img2_g, keypoint_2, good_matches, mask)
