@@ -68,3 +68,5 @@ if __name__ == '__main__':
     keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _extract_SIFT_keypoints(
         sift_obj, img1, img2, img1_g, img2_g)
 
+    _match_keypoints(sift_obj, img1_g, keypoint_1, descriptor_1,
+                     img2_g, keypoint_2, descriptor_2)
