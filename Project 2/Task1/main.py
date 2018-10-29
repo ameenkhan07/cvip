@@ -59,9 +59,12 @@ def _draw_match_keypoints(*args):
     for m, n in matches:
         if m.distance < 0.75*n.distance:
             good_matches.append([m])
+
+    # All matches, inliers and outliers
+    good = [[i[0]] for i in matches]
     # cv2.drawMatchesKnn expects list of lists as matches.
     img3 = cv.drawMatchesKnn(img1_g, keypoint_1, img2_g,
-                             keypoint_2, good_matches, None, flags=2)
+                             keypoint_2, good, None, flags=2)
     _save('task1_matches_knn.jpg', img3)
 
     return(good_matches)
