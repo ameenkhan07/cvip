@@ -35,25 +35,27 @@ def _extract_SIFT_keypoints(sift_obj, img1, img2, img1_g, img2_g):
 
     return(keypoint_1, descriptor_1, keypoint_2, descriptor_2)
 
+
+def _match_keypoints(*args):
     """
     """
-    sift_create_obj = cv.xfeatures2d.SIFT_create()
+    sift_obj = args[0]
+    img1_g, img2_g = args[1], args[4]
+    keypoint_1, descriptor_1 = args[2], args[3]
+    keypoint_2, descriptor_2 = args[5], args[6]
 
-    # Create keypoint for image 1
-    img_gray = cv.cvtColor(img_1, cv.COLOR_BGR2GRAY)
-    keypoint_obj = sift_create_obj.detect(
-        cv.cvtColor(img_1, cv.COLOR_BGR2GRAY), None)
-    img_keypoint_1 = cv.drawKeypoints(img_gray, keypoint_obj, img_1)
-    _save('task1sift1.jpg', img_keypoint_1)
+    bf = cv.BFMatcher()
+    matches = bf.knnMatch(descriptor_1, descriptor_2, k=2)
 
-    # Create keypoint for image 2
-    img_gray = cv.cvtColor(img_2, cv.COLOR_BGR2GRAY)
-    keypoint_obj = sift_create_obj.detect(
-        cv.cvtColor(img_2, cv.COLOR_BGR2GRAY), None)
-    img_keypoint_2 = cv.drawKeypoints(img_gray, keypoint_obj, img_2)
-    _save('task1sift2.jpg', img_keypoint_2)
+    # Apply ratio test
+    good_matches = []
+    for m, n in matches:
+        if m.distance < 0.75*n.distance: good_matches.append([m])
 
-    return(img_keypoint_1, img_keypoint_2)
+    # cv2.drawMatchesKnn expects list of lists as matches.
+    img3 = cv.drawMatchesKnn(img1_g, keypoint_1, img2_g,
+                             keypoint_2, good_matches, None, flags=2)
+    _save('task1 matches knn.jpg', img3)
 
 
 if __name__ == '__main__':
