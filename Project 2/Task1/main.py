@@ -1,5 +1,9 @@
 import os
 import cv2 as cv
+import numpy as np
+
+UBIT = 'ameenmoh'
+_random = np.random.seed(sum([ord(c) for c in UBIT]))
 
 OUTPUT_DIR = "outputs/"
 img1_name = "./mountain1.jpg"
@@ -37,7 +41,8 @@ def _extract_SIFT_keypoints(sift_obj, img1, img2, img1_g, img2_g):
 
 
 def _match_keypoints(*args):
-    """
+    """Draw match image for all matches
+    Keypoint matching using k-nearest neighbour
     """
     sift_obj = args[0]
     img1_g, img2_g = args[1], args[4]
@@ -50,12 +55,28 @@ def _match_keypoints(*args):
     # Apply ratio test
     good_matches = []
     for m, n in matches:
-        if m.distance < 0.75*n.distance: good_matches.append([m])
+        if m.distance < 0.75*n.distance:
+            good_matches.append([m])
 
     # cv2.drawMatchesKnn expects list of lists as matches.
     img3 = cv.drawMatchesKnn(img1_g, keypoint_1, img2_g,
                              keypoint_2, good_matches, None, flags=2)
     _save('task1 matches knn.jpg', img3)
+
+    return(good_matches)
+
+
+def _get_homography_matrix(good_matches, keypoint_1, keypoint_2):
+    """Homography matrix H (with RANSAC) from the image 1 to image 2
+    """
+    source = np.float32(
+        [keypoint_1[m[0].queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    dest = np.float32(
+        [keypoint_2[m[0].trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+
+    H, _ = cv.findHomography(source, dest, cv.RANSAC, 5.0)
+    print("Homography Matrix  : ")
+    print(H)
 
 
 if __name__ == '__main__':
@@ -65,8 +86,13 @@ if __name__ == '__main__':
 
     sift_obj = cv.xfeatures2d.SIFT_create()
 
+    # Part 1
     keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _extract_SIFT_keypoints(
         sift_obj, img1, img2, img1_g, img2_g)
 
-    _match_keypoints(sift_obj, img1_g, keypoint_1, descriptor_1,
-                     img2_g, keypoint_2, descriptor_2)
+    # Part 2
+    good_matches = _match_keypoints(sift_obj, img1_g, keypoint_1, descriptor_1,
+                                    img2_g, keypoint_2, descriptor_2)
+
+    # Part 3
+    _get_homography_matrix(good_matches, keypoint_1, keypoint_2)
