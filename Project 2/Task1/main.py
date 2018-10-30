@@ -61,10 +61,12 @@ def _draw_match_keypoints(*args):
             good_matches.append([m])
 
     # All matches, inliers and outliers
-    good = [[i[0]] for i in matches]
+    # good = [[i[0]] for i in matches]
+    # print(len(good_matches), len(good))
+
     # cv2.drawMatchesKnn expects list of lists as matches.
     img3 = cv.drawMatchesKnn(img1_g, keypoint_1, img2_g,
-                             keypoint_2, good, None, flags=2)
+                             keypoint_2, good_matches, None, flags=2)
     _save('task1_matches_knn.jpg', img3)
 
     return(good_matches)
@@ -78,6 +80,7 @@ def _get_homography_matrix(good_matches, keypoint_1, keypoint_2, _H=True):
     dest = np.float32(
         [keypoint_2[m[0].trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
 
+    # Mask contains both inliers and outliers
     H, mask = cv.findHomography(source, dest, cv.RANSAC, 5.0)
     if _H:
         print("Homography Matrix  : ")
