@@ -23,7 +23,7 @@ def _save(filename, img):
     cv.imwrite(filename, img)
 
 
-def _extract_SIFT_keypoints(sift_obj, img1, img2, img1_g, img2_g):
+def _get_SIFT_keypoints(sift_obj, img1, img2, img1_g, img2_g):
     """Extract SIFT features(keypoints and descriptors) and 
     draw the keypoints and return the images
     """
@@ -109,7 +109,7 @@ def _draw_inlier_match_keypoints(img1_g, keypoint_1, img2_g, keypoint_2, good_ma
     _save('task1_matches.jpg', img3)
 
 
-def _get_stitched_image(img1, img2, H_Matrix):
+def _draw_stitched_image(img1, img2, H_Matrix):
     """
     """
 
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     sift_obj = cv.xfeatures2d.SIFT_create()
 
     # Part 1
-    keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _extract_SIFT_keypoints(
+    keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _get_SIFT_keypoints(
         sift_obj, img1, img2, img1_g, img2_g)
 
     # Part 2
@@ -172,4 +172,4 @@ if __name__ == '__main__':
         img1_g, keypoint_1, img2_g, keypoint_2, good_matches, mask)
 
     # Part 5
-    _get_stitched_image(img2_g, img1_g, H_Matrix)
+    _draw_stitched_image(img2_g, img1_g, H_Matrix)
