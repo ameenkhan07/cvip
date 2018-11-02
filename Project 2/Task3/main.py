@@ -19,15 +19,23 @@ def _show_plot(points, Mu, Mu_color, color_map=[], _scatter=True, _save=True, fi
     if _scatter:
         plt.scatter(points[0], points[1], facecolor=k,
                     marker='^', edgecolor='k')
+
     # Set Centroids
     for i in Mu.keys():
         plt.scatter(*Mu[i], color=Mu_color[i])
+        plt.text(Mu[i][0], Mu[i][1]-0.08,
+                 f'({Mu[i][0]},{Mu[i][1]})', fontsize=4.5)
+
+    if _scatter:
+        for i, j in zip(points[0], points[1]):
+            plt.text(i, j-0.08, f'({i},{j})', fontsize=4.5)
+
     plt.xlim(4, 7)
     plt.ylim(2, 5)
     if _save:
         plt.savefig(os.path.join(OUTPUT_DIR, filename))
-    else:
-        plt.show()
+    # else:
+    plt.show()
 
 
 def _assignment(points, Mu, Mu_color):
