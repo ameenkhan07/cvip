@@ -1,6 +1,7 @@
 import os
 import cv2 as cv
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 
 UBIT = 'ameenmoh'
@@ -71,7 +72,7 @@ def _draw_match_keypoints(*args):
     return(good_matches)
 
 
-def _get_fundamental_matrix(good_matches, keypoint_1, keypoint_2, F_ = True):
+def _get_fundamental_matrix(good_matches, keypoint_1, keypoint_2, F_=True):
     """
     """
     source = np.float32(
@@ -98,7 +99,7 @@ def drawlines(img1, img2, lines, pts1, pts2):
         x0, y0 = map(int, [0, -r[2]/r[1]])
         x1, y1 = map(int, [c, -(r[2]+r[0]*c)/r[1]])
         img1 = cv.line(img1, (x0, y0), (x1, y1), color, 1)
-        # img1 = cv.circle(img1, tuple(pt1), 5, color, -1)
+        img1 = cv.circle(img1, tuple(pt1), 5, color, -1)
         # img2 = cv.circle(img2, tuple(pt2), 5, color, -1)
     return(img1, img2)
 
@@ -127,6 +128,28 @@ def _draw_inlier_matches(img1_g, img2_g, good_matches, keypoint_1, keypoint_2):
     _save('task2_epi_left.jpg', img3)
 
 
+def _draw_disparity_map(img1, img2):
+    """
+    """
+    window_size = 3
+    min_disp = 16
+    num_disp = 112-min_disp
+    stereo = cv.StereoSGBM_create(minDisparity=min_disp,
+                                  numDisparities=num_disp,
+                                  blockSize=16,
+                                  disp12MaxDiff=1,
+                                  uniquenessRatio=10,
+                                  speckleWindowSize=100,
+                                  speckleRange=32
+                                  )
+    disparity = stereo.compute(img1, img2).astype(np.float32) / 8.0
+    # disparity = (disparity - min_disp)/num_disp
+    # plt.imshow(disparity,'task2 disparity')
+    # _save_plot('task2_disparity.jpg', np.asarray(disparity))
+    _save('task2_disparity.jpg', disparity)
+    # plt.show()
+
+
 if __name__ == '__main__':
 
     img1, img1_g = cv.imread(img_left_name), cv.imread(img_left_name, 0)
@@ -134,15 +157,19 @@ if __name__ == '__main__':
 
     sift_obj = cv.xfeatures2d.SIFT_create()
 
-    # Part 1
-    keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _get_SIFT_keypoints(
-        sift_obj, img1, img2, img1_g, img2_g)
+    # # Part 1
+    # keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _get_SIFT_keypoints(
+    #     sift_obj, img1, img2, img1_g, img2_g)
 
-    good_matches = _draw_match_keypoints(
-        sift_obj, img1_g, keypoint_1, descriptor_1, img2_g, keypoint_2, descriptor_2)
+    # good_matches = _draw_match_keypoints(
+    #     sift_obj, img1_g, keypoint_1, descriptor_1, img2_g, keypoint_2, descriptor_2)
 
-    # Part 3
-    F_Matrix, inliers, source, dest = _get_fundamental_matrix(
-        good_matches, keypoint_1, keypoint_2)
+    # # Part 2
+    # F_Matrix, inliers, source, dest = _get_fundamental_matrix(
+    #     good_matches, keypoint_1, keypoint_2)
 
-    _draw_inlier_matches(img1_g, img2_g, good_matches, keypoint_1, keypoint_2)
+    # # Part 3 : Inlier Epilines for the 2 images
+    # _draw_inlier_matches(img1_g, img2_g, good_matches, keypoint_1, keypoint_2)
+
+    # Part 4 : Draw Disparity Map
+    _draw_disparity_map(img1_g, img2_g)
