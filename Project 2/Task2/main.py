@@ -1,7 +1,6 @@
 import os
 import cv2 as cv
 import numpy as np
-from matplotlib import pyplot as plt
 import random
 
 UBIT = 'ameenmoh'
@@ -72,7 +71,7 @@ def _draw_match_keypoints(*args):
     return(good_matches)
 
 
-def _get_fundamental_matrix(good_matches, keypoint_1, keypoint_2, F_=True):
+def _get_fundamental_matrix(good_matches, keypoint_1, keypoint_2, F_ = True):
     """
     """
     source = np.float32(
@@ -85,6 +84,47 @@ def _get_fundamental_matrix(good_matches, keypoint_1, keypoint_2, F_=True):
         print('Fundamental Matrix')
         print(F)
     return F, mask, source, dest
+
+
+def drawlines(img1, img2, lines, pts1, pts2):
+    """ img1 - image on which we draw the epilines for the points in img2
+        lines - corresponding epilines 
+    """
+    r, c = img1.shape
+    img1 = cv.cvtColor(img1, cv.COLOR_GRAY2BGR)
+    img2 = cv.cvtColor(img2, cv.COLOR_GRAY2BGR)
+    for r, pt1, pt2 in zip(lines, pts1, pts2):
+        color = tuple(np.random.randint(0, 255, 3).tolist())
+        x0, y0 = map(int, [0, -r[2]/r[1]])
+        x1, y1 = map(int, [c, -(r[2]+r[0]*c)/r[1]])
+        img1 = cv.line(img1, (x0, y0), (x1, y1), color, 1)
+        # img1 = cv.circle(img1, tuple(pt1), 5, color, -1)
+        # img2 = cv.circle(img2, tuple(pt2), 5, color, -1)
+    return(img1, img2)
+
+
+def _draw_inlier_matches(img1_g, img2_g, good_matches, keypoint_1, keypoint_2):
+    """
+    """
+    good_matches = random.sample(good_matches, 10)
+    F, inliers, pts1, pts2 = _get_fundamental_matrix(
+        good_matches, keypoint_1, keypoint_2, False)
+    # Find epilines corresponding to points in right image (second image) and
+    # drawing its lines on left image
+    lines1 = cv.computeCorrespondEpilines(pts2.reshape(-1, 1, 2), 2, F)
+    lines1 = lines1.reshape(-1, 3)
+    img5, img6 = drawlines(img1_g, img2_g, lines1, pts1, pts2)
+
+    # Find epilines corresponding to points in left image (first image) and
+    # drawing its lines on right image
+    lines2 = cv.computeCorrespondEpilines(pts1.reshape(-1, 1, 2), 1, F)
+    lines2 = lines2.reshape(-1, 3)
+    img3, img4 = drawlines(img2_g, img1_g, lines2, pts2, pts1)
+
+    # plt.subplot(121), plt.imshow(img5)
+    _save('task2_epi_right.jpg', img5)
+    # plt.subplot(122), plt.imshow(img3)
+    _save('task2_epi_left.jpg', img3)
 
 
 if __name__ == '__main__':
@@ -104,3 +144,5 @@ if __name__ == '__main__':
     # Part 3
     F_Matrix, inliers, source, dest = _get_fundamental_matrix(
         good_matches, keypoint_1, keypoint_2)
+
+    _draw_inlier_matches(img1_g, img2_g, good_matches, keypoint_1, keypoint_2)
