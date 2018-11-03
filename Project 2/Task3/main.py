@@ -4,7 +4,7 @@ import numpy as np
 import cv2 as cv
 
 UBIT = 'ameenmoh'
-np..seed(sum([ord(c) for c in UBIT]))
+np.random.seed(sum([ord(c) for c in UBIT]))
 
 OUTPUT_DIR = "outputs/"
 if not os.path.exists(OUTPUT_DIR):
@@ -110,7 +110,10 @@ def _quantization(points, K, filename):
              for p in row]for row in points]
     # Get minimum value for each each distance
     # print(dist[0])
-    new_point = [[Mu[np.argmin(p)] for p in row]for row in points]
+    new_point = [[Mu[np.argmin(p)] for p in row]for row in dist]
+    mu_classified = [[np.argmin(p) for p in row]for row in dist]
+    # print(new_point)
+    # print(mu_classified)
     _save(filename, np.asarray(new_point))
     # print(K)
 
