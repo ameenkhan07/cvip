@@ -14,7 +14,7 @@ if not os.path.exists(OUTPUT_DIR):
 img_name = "./baboon.jpg"
 
 
-def _show_plot(points, Mu, Mu_color, color_map=[], _scatter=True, _save=True, filename='temp.png'):
+def _show_plot(points, Mu, Mu_color, color_map=[], _save=True, filename='temp.png'):
     """
     """
     if len(color_map):
@@ -23,19 +23,18 @@ def _show_plot(points, Mu, Mu_color, color_map=[], _scatter=True, _save=True, fi
         k = '1'
     fig = plt.figure(figsize=(5, 5))
 
-    if _scatter:
-        plt.scatter(points[0], points[1], facecolor=k,
-                    marker='^', edgecolor='k')
+    # Scatter Points
+    plt.scatter(points[0], points[1], facecolor=k,
+                marker='^', edgecolor='k')
+    # Add coodinates to the scatter points
+    for i, j in zip(points[0], points[1]):
+        plt.text(i, j-0.08, f'({i},{j})', fontsize=4.5)
 
-    # Set Centroids
+    # Set Centroids and add annoted coordinate text
     for i in Mu.keys():
         plt.scatter(*Mu[i], color=Mu_color[i])
         plt.text(Mu[i][0], Mu[i][1]-0.08,
                  f'({Mu[i][0]},{Mu[i][1]})', fontsize=4.5)
-
-    if _scatter:
-        for i, j in zip(points[0], points[1]):
-            plt.text(i, j-0.08, f'({i},{j})', fontsize=4.5)
 
     plt.xlim(4, 7)
     plt.ylim(2, 5)
@@ -157,7 +156,7 @@ if __name__ == '__main__':
     Mu = _update_Mu(Mu, closest, points)
     print('Updated Centroids : ', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
-               _scatter=False, filename='task3_iter1_b.png')
+               filename='task3_iter1_b.png')
 
     # Part 3.a : Kmeans Classification second iteration
     # Recompute coloring based on new centroids
@@ -171,7 +170,7 @@ if __name__ == '__main__':
     Mu = _update_Mu(Mu, closest, points)
     print('Updated Centroids : ', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
-               _scatter=False, filename='task3_iter2_b.png')
+               filename='task3_iter2_b.png')
 
     # Part 4 : Colour Quantization
     img = cv.imread(img_name)
