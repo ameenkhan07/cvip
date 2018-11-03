@@ -109,13 +109,11 @@ def _quantization(points, K, filename):
     dist = [[[_rgb_euclidian_distance(p, m) for m in Mu]
              for p in row]for row in points]
     # Get minimum value for each each distance
-    # print(dist[0])
-    new_point = [[Mu[np.argmin(p)] for p in row]for row in dist]
+    remapped_points = [[Mu[np.argmin(p)] for p in row]for row in dist]
     mu_classified = [[np.argmin(p) for p in row]for row in dist]
-    # print(new_point)
+    # print(remapped_points)
     # print(mu_classified)
-    _save(filename, np.asarray(new_point))
-    # print(K)
+    _save(filename, np.asarray(remapped_points))
 
 
 def _rgb_euclidian_distance(p1, p2):
@@ -146,22 +144,22 @@ if __name__ == '__main__':
     Mu_color = {1: 'r', 2: 'g', 3: 'b'}
 
     # Initial Plot : No Classification
-    _show_plot(points, Mu, Mu_color)
+    # _show_plot(points, Mu, Mu_color, 'task3_iter0.png')
 
-    # Kmeans Classification, points according to the initial centroids
+    # Part 1 : Kmeans Classification, points according to the initial centroids
     closest, color_map = _assignment(points, Mu, Mu_color)
     print('Classification Vector (First Iteration): ',
           np.vstack([points, color_map]))
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter1_a.png')
 
-    # Update Centroids
+    # Part 2 : Update Centroids
     Mu = _update_Mu(Mu, closest, points)
     print('Updated Centroids : ', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                _scatter=False, filename='task3_iter1_b.png')
 
-    # Kmeans Classification second iteration
+    # Part 3.a : Kmeans Classification second iteration
     # Recompute coloring based on new centroids
     closest, color_map = _assignment(points, Mu, Mu_color)
     print('Classification Vector (Second Iteration) : ',
@@ -169,13 +167,13 @@ if __name__ == '__main__':
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter2_a.png')
 
-    # Update Centroids for the second time
+    # Part 3.b : Update Centroids for the second time
     Mu = _update_Mu(Mu, closest, points)
     print('Updated Centroids : ', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                _scatter=False, filename='task3_iter2_b.png')
 
-    # Colour Quantization
+    # Part 4 : Colour Quantization
     img = cv.imread(img_name)
     K = [(3, 'task3_baboon_3.jpg'), (5, 'task3_baboon_5.jpg'),
          (10, 'task3_baboon_10.jpg'), (20, 'task3_baboon_20.jpg')]
