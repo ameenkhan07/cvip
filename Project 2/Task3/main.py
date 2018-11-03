@@ -1,10 +1,17 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import cv2 as cv
+
+UBIT = 'ameenmoh'
+np..seed(sum([ord(c) for c in UBIT]))
 
 OUTPUT_DIR = "outputs/"
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
+
+# For Color Quantization task
+img_name = "./baboon.jpg"
 
 
 def _show_plot(points, Mu, Mu_color, color_map=[], _scatter=True, _save=True, filename='temp.png'):
@@ -34,8 +41,19 @@ def _show_plot(points, Mu, Mu_color, color_map=[], _scatter=True, _save=True, fi
     plt.ylim(2, 5)
     if _save:
         plt.savefig(os.path.join(OUTPUT_DIR, filename))
-    # else:
-    plt.show()
+    else:
+        plt.show()
+
+
+def _save(filename, img):
+    """Saves the image with filename in output dir 
+    """
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)
+    # filename = filename+'.png'
+    filename = os.path.join(OUTPUT_DIR, filename)
+    # print(filename, img.shape)
+    cv.imwrite(filename, img)
 
 
 def _assignment(points, Mu, Mu_color):
@@ -80,6 +98,35 @@ def _update_Mu(Mu, closest, points):
     return new_Mu
 
 
+def _quantization(points, K, filename):
+    """Classify points according to the centroids
+    """
+    #  Centroid Matrix
+    Mu = [[round(np.random.uniform(0, 255), 2)
+           for i in range(3)] for j in range(K)]
+    # print('Centroid POINTS', Mu, ' for ', K)
+    # Populate Distance matrix of K, 3 -> R, G, and B
+    dist = [[[_rgb_euclidian_distance(p, m) for m in Mu]
+             for p in row]for row in points]
+    # Get minimum value for each each distance
+    # print(dist[0])
+    new_point = [[Mu[np.argmin(p)] for p in row]for row in points]
+    _save(filename, np.asarray(new_point))
+    # print(K)
+
+
+def _rgb_euclidian_distance(p1, p2):
+    """Euclidian Distance of R, G, B values of 2 points
+    """
+    return(round(
+        np.sqrt(
+            (p1[0] - p2[0]) ** 2 +
+            (p1[0] - p2[0]) ** 2 +
+            (p1[0] - p2[0]) ** 2
+        ), 2
+    ))
+
+
 if __name__ == '__main__':
     # Cartesian points to be clusters
     points = np.asarray([
@@ -96,7 +143,7 @@ if __name__ == '__main__':
     Mu_color = {1: 'r', 2: 'g', 3: 'b'}
 
     # Initial Plot : No Classification
-    # _show_plot(points, Mu, Mu_color)
+    _show_plot(points, Mu, Mu_color)
 
     # Kmeans Classification, points according to the initial centroids
     closest, color_map = _assignment(points, Mu, Mu_color)
@@ -124,3 +171,11 @@ if __name__ == '__main__':
     print('Updated Centroids : ', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                _scatter=False, filename='task3_iter2_b.png')
+
+    # Colour Quantization
+    img = cv.imread(img_name)
+    K = [(3, 'task3_baboon_3.jpg'), (5, 'task3_baboon_5.jpg'),
+         (10, 'task3_baboon_10.jpg'), (20, 'task3_baboon_20.jpg')]
+
+    for i, k in enumerate(K):
+        _quantization(img, k[0], k[1])
