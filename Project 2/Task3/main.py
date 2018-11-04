@@ -2,6 +2,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
+from gaussian_mixture_model import *
+from old_faithful import *
 
 UBIT = 'ameenmoh'
 np.random.seed(sum([ord(c) for c in UBIT]))
@@ -179,3 +181,24 @@ if __name__ == '__main__':
 
     for i, k in enumerate(K):
         _quantization(img, k[0], k[1])
+
+    # Part 5 GMM , import from another file and run here
+    # Part a : GMM on given data
+    X = np.asarray([
+        [5.9, 3.2], [4.6, 2.9], [6.2, 2.8], [4.7, 3.2], [5.5, 4.2], [
+            5.0, 3.0], [4.9, 3.1], [6.7, 3.1], [5.1, 3.8], [6.0, 3.0]
+    ])
+
+    # Centroids, and centroid-color mapping
+    Mu = {
+        0: [6.2, 3.2],
+        1: [6.6, 3.7],
+        2: [6.5, 3.0]
+    }
+    # Covariance Metrix
+    epsilon = [[[0.5, 0], [0, 0.5]], [
+        [0.5, 0], [0, 0.5]], [[0.5, 0], [0, 0.5]]]
+    # Mixing Coefficients
+    pi = [1/3, 1/3, 1/3]
+
+    gmm_expectation_maximization(X, Mu, epsilon, pi)
