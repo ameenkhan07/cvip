@@ -36,7 +36,7 @@ def gmm_expectation_maximization(X, Mu, epsilon, pi):
         # 2. Compute new variances
         ## Todo
     
-    print('Recomputed Mu : ', new_Mu)
+    print('\nRecomputed Mu FOR GMM, Iteration 1: \n', new_Mu)
     # print('Recomputed Epsilon : ', new_Epsilon)
 
 

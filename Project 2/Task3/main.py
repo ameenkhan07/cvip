@@ -16,17 +16,14 @@ if not os.path.exists(OUTPUT_DIR):
 img_name = "./baboon.jpg"
 
 
-def _show_plot(points, Mu, Mu_color, color_map=[], _save=True, filename='temp.png'):
+def _show_plot(points, Mu, Mu_color, color_map, _save=True, filename='temp.png'):
+    """Plot Graphs
     """
-    """
-    if len(color_map):
-        k = color_map
-    else:
-        k = '1'
+
     fig = plt.figure(figsize=(5, 5))
 
     # Scatter Points
-    plt.scatter(points[0], points[1], facecolor=k,
+    plt.scatter(points[0], points[1], facecolor=color_map,
                 marker='^', edgecolor='k')
     # Add coodinates to the scatter points
     for i, j in zip(points[0], points[1]):
@@ -61,10 +58,7 @@ def _assignment(points, Mu, Mu_color):
     """Calculate Euclidean distance from provided Centroids
     """
     # Calculate Distance matrix for the points to the given centroids Mu
-    distance = [np.sqrt(
-                (points[0] - Mu[i][0]) ** 2
-                + (points[1] - Mu[i][1]) ** 2
-                ) for i in Mu.keys()]
+    distance = [euclidian_distance([points, Mu[i]]) for i in Mu.keys()]
     closest, color = [], []
     # print(distance)
     # Get the closest centroid for every point using distance matrix
@@ -107,7 +101,7 @@ def _quantization(points, K, filename):
            for i in range(3)] for j in range(K)]
     # print('Centroid POINTS', Mu, ' for ', K)
     # Populate Distance matrix of K, 3 -> R, G, and B
-    dist = [[[_rgb_euclidian_distance(p, m) for m in Mu]
+    dist = [[[euclidian_distance([p, m]) for m in Mu]
              for p in row]for row in points]
     # Get minimum value for each each distance
     remapped_points = [[Mu[np.argmin(p)] for p in row]for row in dist]
@@ -117,16 +111,11 @@ def _quantization(points, K, filename):
     _save(filename, np.asarray(remapped_points))
 
 
-def _rgb_euclidian_distance(p1, p2):
-    """Euclidian Distance of R, G, B values of 2 points
+def euclidian_distance(p):
+    """Euclidian Distance of 2 points
+    Works for 2D and 3D
     """
-    return(round(
-        np.sqrt(
-            (p1[0] - p2[0]) ** 2 +
-            (p1[0] - p2[0]) ** 2 +
-            (p1[0] - p2[0]) ** 2
-        ), 2
-    ))
+    return(np.sqrt(sum([(p[0][i]-p[1][i])**2 for i, _ in enumerate(p)])))
 
 
 if __name__ == '__main__':
@@ -144,35 +133,33 @@ if __name__ == '__main__':
     }
     Mu_color = {1: 'r', 2: 'g', 3: 'b'}
 
-    # Initial Plot : No Classification
-    # _show_plot(points, Mu, Mu_color, 'task3_iter0.png')
-
     # Part 1 : Kmeans Classification, points according to the initial centroids
     closest, color_map = _assignment(points, Mu, Mu_color)
-    print('Classification Vector (First Iteration): ',
+    print('\nClassification Vector (First Iteration): \n',
           np.vstack([points, color_map]))
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter1_a.png')
 
     # Part 2 : Update Centroids
     Mu = _update_Mu(Mu, closest, points)
-    print('Updated Centroids : ', Mu)
+    print('\nUpdated Centroids : \n', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter1_b.png')
 
     # Part 3.a : Kmeans Classification second iteration
     # Recompute coloring based on new centroids
     closest, color_map = _assignment(points, Mu, Mu_color)
-    print('Classification Vector (Second Iteration) : ',
+    print('\nClassification Vector (Second Iteration) : \n',
           np.vstack([points, color_map]))
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter2_a.png')
 
     # Part 3.b : Update Centroids for the second time
     Mu = _update_Mu(Mu, closest, points)
-    print('Updated Centroids : ', Mu)
+    print('\nUpdated Centroids : \n', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter2_b.png')
+    print('\n----------------------------------------------\n')
 
     # Part 4 : Colour Quantization
     img = cv.imread(img_name)
@@ -201,4 +188,5 @@ if __name__ == '__main__':
     # Mixing Coefficients
     pi = [1/3, 1/3, 1/3]
 
+    print('\nPART 3.5 : GMM EM Algorithm : \n', Mu)
     gmm_expectation_maximization(X, Mu, epsilon, pi)
