@@ -6,6 +6,7 @@ import random
 
 UBIT = 'ameenmoh'
 np.random.seed(sum([ord(c) for c in UBIT]))
+random.seed(sum([ord(c) for c in UBIT]))
 
 OUTPUT_DIR = "outputs/"
 img1_name = "./mountain1.jpg"
@@ -92,11 +93,12 @@ def _draw_inlier_match_keypoints(img1_g, keypoint_1, img2_g, keypoint_2, good_ma
     """Draw match image for  10 random matches using only inliers.
     TODO : Check if good_matches in this case is just inliers or both inliers and outliers
     """
-    good_matches = random.sample(good_matches, 10)
-    mask, _ = _get_homography_matrix(
-        good_matches, keypoint_1, keypoint_2, _H=False)
     matchesMask = mask.ravel().tolist()
-    # matchesMask = matchesMask[:10]
+    # Inlier points are ones where mask is 1
+    inlier_index = random.sample(
+        [i for i, ele in enumerate(matchesMask) if ele == 1], 10)
+    matchesMask = [matchesMask[i] for i in inlier_index]
+    good_matches = [good_matches[i] for i in inlier_index]
     draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
                        singlePointColor=None,
                        matchesMask=matchesMask,  # draw only inliers
