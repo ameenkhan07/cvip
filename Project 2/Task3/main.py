@@ -181,18 +181,17 @@ if __name__ == '__main__':
                filename='task3_iter2_a.png')
 
     # Part 3.b : Update Centroids for the second time
-    # Used color map from previos step
+    # Used color map from previous step
     Mu = _update_Mu(Mu, closest, points)
     print('\nUpdated Centroids : \n', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter2_b.png')
     print('\n----------------------------------------------\n')
+
     # Part 4 : Colour Quantization
     img = cv.imread(img_name)
     K = [(3, 'task3_baboon_3.jpg'), (5, 'task3_baboon_5.jpg'),
          (10, 'task3_baboon_10.jpg'), (20, 'task3_baboon_20.jpg')]
-
-    # K = [(20, 't_task3_baboon_20.jpg')]
 
     for k in K:
         # kmeans_quantization_alt(img, k[0], k[1])

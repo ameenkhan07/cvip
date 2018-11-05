@@ -20,7 +20,6 @@ def _save(filename, img):
         os.makedirs(OUTPUT_DIR)
     # filename = filename+'.png'
     filename = os.path.join(OUTPUT_DIR, filename)
-    # print(filename, img.shape)
     cv.imwrite(filename, img)
 
 
@@ -61,10 +60,6 @@ def _draw_match_keypoints(*args):
         if m.distance < 0.75*n.distance:
             good_matches.append([m])
 
-    # All matches, inliers and outliers
-    # good = [[i[0]] for i in matches]
-    # print(len(good_matches), len(good))
-
     # cv2.drawMatchesKnn expects list of lists as matches.
     img3 = cv.drawMatchesKnn(img1_g, keypoint_1, img2_g,
                              keypoint_2, good_matches, None, flags=2)
@@ -90,14 +85,13 @@ def _get_fundamental_matrix(good_matches, keypoint_1, keypoint_2, F_=True):
 
 def drawlines(img1, img2, lines, pts1, pts2, colorArr):
     """
-    img1 - image on which we draw the epilines for the points in img2
-    lines - corresponding epilines
+    Draw Epilines, given Left and Right bg images with corresponding EPI points
     """
     r, c = img1.shape
     img1 = cv.cvtColor(img1, cv.COLOR_GRAY2BGR)
     img2 = cv.cvtColor(img2, cv.COLOR_GRAY2BGR)
     color_counter = 0  # For color counter
-    for r, pt1, pt2 in zip(lines, pts1, pts2):
+    for r in lines:
         color = colorArr[color_counter]
         color_counter += 1
         x0, y0 = map(int, [0, -r[2]/r[1]])
@@ -107,12 +101,10 @@ def drawlines(img1, img2, lines, pts1, pts2, colorArr):
 
 
 def _draw_inlier_matches(img1_g, img2_g, mask, fundamental, src_pts, dst_pts):
-    """
+    """Draw inlier matches(random) for the two epipolar images
     """
     # Inlier points filtering from given set of src/dest points
     dest_pts, src_pts = dst_pts[mask.ravel() == 1], src_pts[mask.ravel() == 1]
-    # print(dest_pts.shape, src_pts.shape)
-
     # Select random 10 points in the inlier points
     r_ = np.random.randint(0, src_pts.shape[0], 10)
 
@@ -134,8 +126,8 @@ def _draw_inlier_matches(img1_g, img2_g, mask, fundamental, src_pts, dst_pts):
         dest_pts.reshape(-1, 1, 2), 1, fundamental).reshape(-1, 3)
     img3, img4 = drawlines(img2_g, img1_g, lines2,
                            src_pts, dest_pts, random_col_list)
-    _save('task2_epi_right.jpg', img3)
-    _save('task2_epi_left.jpg', img5)
+    _save('task2_epi_right.jpg', img3)# Save left epipolar image
+    _save('task2_epi_left.jpg', img5)# Save right epipolar image
 
 def _draw_disparity_map(img1, img2):
     """
@@ -152,11 +144,7 @@ def _draw_disparity_map(img1, img2):
                                   speckleRange=32
                                   )
     disparity = stereo.compute(img1, img2).astype(np.float32) / 8.0
-    # disparity = (disparity - min_disp)/num_disp
-    # plt.imshow(disparity,'task2 disparity')
-    # _save_plot('task2_disparity.jpg', np.asarray(disparity))
     _save('task2_disparity.jpg', disparity)
-    # plt.show()
 
 
 if __name__ == '__main__':
