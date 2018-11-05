@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2 as cv
@@ -54,12 +55,19 @@ def _save(filename, img):
     cv.imwrite(filename, img)
 
 
-def _assignment(points, Mu, Mu_color):
+def euclidian_distance(p):
+    """Euclidian Distance of 2 points
+    Works for 2D and 3D
+    """
+    return(np.sqrt(sum([(p[0][i]-p[1][i])**2 for i, _ in enumerate(p)])))
+
+
+def _assignment(points, Mu):
     """Calculate Euclidean distance from provided Centroids
     """
     # Calculate Distance matrix for the points to the given centroids Mu
     distance = [euclidian_distance([points, Mu[i]]) for i in Mu.keys()]
-    closest, color = [], []
+    closest = []
     # print(distance)
     # Get the closest centroid for every point using distance matrix
     for i in range(len(points[0])):
@@ -70,17 +78,12 @@ def _assignment(points, Mu, Mu_color):
                 _MIN = distance[j][i]
                 _INDEX = j
         closest.append(_INDEX+1)
-    color = [Mu_color[i] for i in closest]
-    # print(Mu_color, closest)
-    return (closest, color)
+    return (closest)
 
 
 def _update_Mu(Mu, closest, points):
     """
     """
-    # print(points)
-    # print(closest)
-    # print(Mu)
     new_Mu = {}
     for i in Mu.keys():
         x = round(np.mean([points[0][j1]
@@ -93,29 +96,45 @@ def _update_Mu(Mu, closest, points):
     return new_Mu
 
 
-def _quantization(points, K, filename):
-    """Classify points according to the centroids
+def kmeans_quantization(img, K, filename):
     """
-    #  Centroid Matrix
-    Mu = [[round(np.random.uniform(0, 255), 2)
+    """
+    print(
+        f'\n\nKMEANS quantization for cluster Size : {K}, Output File : {filename} (Running...)\n\n')
+    # Random initialization of Mu
+    from pprint import pprint
+    Mu = [[np.random.uniform(0, 255)
            for i in range(3)] for j in range(K)]
-    # print('Centroid POINTS', Mu, ' for ', K)
-    # Populate Distance matrix of K, 3 -> R, G, and B
-    dist = [[[euclidian_distance([p, m]) for m in Mu]
-             for p in row]for row in points]
-    # Get minimum value for each each distance
+    # pprint(Mu)
+    # Kmeans Clustering until convergence
+    for ranger in range(50):
+        # print(f'----------------{ranger}--------------------')
+        ranger += 1
+        # Classify the img matrix to respective classes
+        dist = [[[euclidian_distance([p, m]) for m in Mu]
+                 for p in row]for row in img]
+        # Get the index of the closest point
+        closest = [[np.argmin(p) for p in row]for row in dist]
+        #  Recompute Centroids for next iteration
+        new_Mu = []
+        for m, ele in enumerate(Mu):
+            # Get relevant points lying inside cluster m
+            temp = [img[r][c]
+                    for r, rows in enumerate(closest) for c, col in enumerate(rows) if m == col]
+            R_new, G_new, B_new = np.mean([v[0] for v in temp]), np.mean([
+                v[1] for v in temp]), np.mean([v[2] for v in temp])
+            new_Mu.append([R_new, G_new, B_new])
+
+        # Update Mu
+        if new_Mu == Mu:
+            break
+        Mu = deepcopy(new_Mu)
+    print(f' Final Centroids for {K} clusters : \n', Mu)
+    # Quantize all points using centroid colour and final classificiation
     remapped_points = [[Mu[np.argmin(p)] for p in row]for row in dist]
-    mu_classified = [[np.argmin(p) for p in row]for row in dist]
-    # print(remapped_points)
-    # print(mu_classified)
+    # Save Quantized image matrix
     _save(filename, np.asarray(remapped_points))
-
-
-def euclidian_distance(p):
-    """Euclidian Distance of 2 points
-    Works for 2D and 3D
-    """
-    return(np.sqrt(sum([(p[0][i]-p[1][i])**2 for i, _ in enumerate(p)])))
+    print('\nImage saved !!!\n')
 
 
 if __name__ == '__main__':
@@ -134,13 +153,15 @@ if __name__ == '__main__':
     Mu_color = {1: 'r', 2: 'g', 3: 'b'}
 
     # Part 1 : Kmeans Classification, points according to the initial centroids
-    closest, color_map = _assignment(points, Mu, Mu_color)
+    closest = _assignment(points, Mu)
+    color_map = [Mu_color[i] for i in closest]
     print('\nClassification Vector (First Iteration): \n',
           np.vstack([points, color_map]))
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter1_a.png')
 
     # Part 2 : Update Centroids
+    # Use color map from previous step
     Mu = _update_Mu(Mu, closest, points)
     print('\nUpdated Centroids : \n', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
@@ -148,26 +169,27 @@ if __name__ == '__main__':
 
     # Part 3.a : Kmeans Classification second iteration
     # Recompute coloring based on new centroids
-    closest, color_map = _assignment(points, Mu, Mu_color)
+    closest = _assignment(points, Mu)
+    color_map = [Mu_color[i] for i in closest]
     print('\nClassification Vector (Second Iteration) : \n',
           np.vstack([points, color_map]))
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter2_a.png')
 
     # Part 3.b : Update Centroids for the second time
+    # Used color map from previos step
     Mu = _update_Mu(Mu, closest, points)
     print('\nUpdated Centroids : \n', Mu)
     _show_plot(points, Mu, Mu_color, color_map=color_map,
                filename='task3_iter2_b.png')
     print('\n----------------------------------------------\n')
-
     # Part 4 : Colour Quantization
     img = cv.imread(img_name)
     K = [(3, 'task3_baboon_3.jpg'), (5, 'task3_baboon_5.jpg'),
          (10, 'task3_baboon_10.jpg'), (20, 'task3_baboon_20.jpg')]
 
-    for i, k in enumerate(K):
-        _quantization(img, k[0], k[1])
+    for k in K:
+        kmeans_quantization(img, k[0], k[1])
 
     # Part 5 GMM , import from another file and run here
     # Part a : GMM on given data
