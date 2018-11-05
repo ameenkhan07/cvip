@@ -6,6 +6,7 @@ import random
 
 UBIT = 'ameenmoh'
 np.random.seed(sum([ord(c) for c in UBIT]))
+random.seed(sum([ord(c) for c in UBIT]))
 
 OUTPUT_DIR = "outputs/"
 img_left_name = "./tsucuba_left.png"
@@ -87,46 +88,54 @@ def _get_fundamental_matrix(good_matches, keypoint_1, keypoint_2, F_=True):
     return F, mask, source, dest
 
 
-def drawlines(img1, img2, lines, pts1, pts2):
-    """ img1 - image on which we draw the epilines for the points in img2
-        lines - corresponding epilines 
+def drawlines(img1, img2, lines, pts1, pts2, colorArr):
+    """
+    img1 - image on which we draw the epilines for the points in img2
+    lines - corresponding epilines
     """
     r, c = img1.shape
     img1 = cv.cvtColor(img1, cv.COLOR_GRAY2BGR)
     img2 = cv.cvtColor(img2, cv.COLOR_GRAY2BGR)
+    color_counter = 0  # For color counter
     for r, pt1, pt2 in zip(lines, pts1, pts2):
-        color = tuple(np.random.randint(0, 255, 3).tolist())
+        color = colorArr[color_counter]
+        color_counter += 1
         x0, y0 = map(int, [0, -r[2]/r[1]])
         x1, y1 = map(int, [c, -(r[2]+r[0]*c)/r[1]])
         img1 = cv.line(img1, (x0, y0), (x1, y1), color, 1)
-        img1 = cv.circle(img1, tuple(pt1), 5, color, -1)
-        # img2 = cv.circle(img2, tuple(pt2), 5, color, -1)
-    return(img1, img2)
+    return img1, img2
 
 
-def _draw_inlier_matches(img1_g, img2_g, good_matches, keypoint_1, keypoint_2):
+def _draw_inlier_matches(img1_g, img2_g, mask, fundamental, src_pts, dst_pts):
     """
     """
-    good_matches = random.sample(good_matches, 10)
-    F, inliers, pts1, pts2 = _get_fundamental_matrix(
-        good_matches, keypoint_1, keypoint_2, False)
-    # Find epilines corresponding to points in right image (second image) and
-    # drawing its lines on left image
-    lines1 = cv.computeCorrespondEpilines(pts2.reshape(-1, 1, 2), 2, F)
-    lines1 = lines1.reshape(-1, 3)
-    img5, img6 = drawlines(img1_g, img2_g, lines1, pts1, pts2)
+    # Inlier points filtering from given set of src/dest points
+    dest_pts, src_pts = dst_pts[mask.ravel() == 1], src_pts[mask.ravel() == 1]
+    # print(dest_pts.shape, src_pts.shape)
 
+    # Select random 10 points in the inlier points
+    r_ = np.random.randint(0, src_pts.shape[0], 10)
+
+    dest_pts = np.asarray([dest_pts[i] for i in r_])
+    src_pts = np.asarray([src_pts[i] for i in r_])
+
+    lines1 = cv.computeCorrespondEpilines(
+        src_pts.reshape(-1, 1, 2), 2, fundamental).reshape(-1, 3)
+
+    # Select Random 10 colors for the epilines in left and right images
+    random_col_list = [tuple(np.random.randint(
+        0, 255, 3).tolist()) for _ in dest_pts]
+
+    img5, img6 = drawlines(img1_g, img2_g, lines1,
+                           dest_pts, src_pts, random_col_list)
     # Find epilines corresponding to points in left image (first image) and
     # drawing its lines on right image
-    lines2 = cv.computeCorrespondEpilines(pts1.reshape(-1, 1, 2), 1, F)
-    lines2 = lines2.reshape(-1, 3)
-    img3, img4 = drawlines(img2_g, img1_g, lines2, pts2, pts1)
-
-    # plt.subplot(121), plt.imshow(img5)
-    _save('task2_epi_right.jpg', img5)
-    # plt.subplot(122), plt.imshow(img3)
+    lines2 = cv.computeCorrespondEpilines(
+        dest_pts.reshape(-1, 1, 2), 1, fundamental).reshape(-1, 3)
+    img3, img4 = drawlines(img2_g, img1_g, lines2,
+                           src_pts, dest_pts, random_col_list)
+    _save('task2_epi_right.jpg', img3)
     _save('task2_epi_left.jpg', img3)
-
 
 def _draw_disparity_map(img1, img2):
     """
@@ -157,19 +166,19 @@ if __name__ == '__main__':
 
     sift_obj = cv.xfeatures2d.SIFT_create()
 
-    # # Part 1
-    # keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _get_SIFT_keypoints(
-    #     sift_obj, img1, img2, img1_g, img2_g)
+    # Part 1
+    keypoint_1, descriptor_1, keypoint_2, descriptor_2 = _get_SIFT_keypoints(
+        sift_obj, img1, img2, img1_g, img2_g)
 
-    # good_matches = _draw_match_keypoints(
-    #     sift_obj, img1_g, keypoint_1, descriptor_1, img2_g, keypoint_2, descriptor_2)
+    good_matches = _draw_match_keypoints(
+        sift_obj, img1_g, keypoint_1, descriptor_1, img2_g, keypoint_2, descriptor_2)
 
-    # # Part 2
-    # F_Matrix, inliers, source, dest = _get_fundamental_matrix(
-    #     good_matches, keypoint_1, keypoint_2)
+    # Part 2
+    F_Matrix, mask, source, dest = _get_fundamental_matrix(
+        good_matches, keypoint_1, keypoint_2)
 
-    # # Part 3 : Inlier Epilines for the 2 images
-    # _draw_inlier_matches(img1_g, img2_g, good_matches, keypoint_1, keypoint_2)
+    # Part 3 : Inlier Epilines for the 2 images
+    _draw_inlier_matches(img1_g, img2_g, mask, F_Matrix, source, dest)
 
     # Part 4 : Draw Disparity Map
     _draw_disparity_map(img1_g, img2_g)
