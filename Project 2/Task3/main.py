@@ -5,9 +5,11 @@ import numpy as np
 import cv2 as cv
 from gaussian_mixture_model import *
 from old_faithful import *
+import random
 
 UBIT = 'ameenmoh'
 np.random.seed(sum([ord(c) for c in UBIT]))
+random.seed(sum([ord(c) for c in UBIT]))
 
 OUTPUT_DIR = "outputs/"
 if not os.path.exists(OUTPUT_DIR):
@@ -103,12 +105,13 @@ def kmeans_quantization(img, K, filename):
         f'\n\nKMEANS quantization for cluster Size : {K}, Output File : {filename} (Running...)\n\n')
     # Random initialization of Mu
     from pprint import pprint
-    Mu = [[np.random.uniform(0, 255)
-           for i in range(3)] for j in range(K)]
+    Mu = [img[random.sample(range(img.shape[0]), K)[i]][random.sample(
+        range(img.shape[1]), K)[i]] for i in range(K)]
     # pprint(Mu)
+
     # Kmeans Clustering until convergence
-    for ranger in range(50):
-        # print(f'----------------{ranger}--------------------')
+    for ranger in range(40):
+        print(f'----------------{ranger}--------------------')
         ranger += 1
         # Classify the img matrix to respective classes
         dist = [[[euclidian_distance([p, m]) for m in Mu]
@@ -124,9 +127,10 @@ def kmeans_quantization(img, K, filename):
             R_new, G_new, B_new = np.mean([v[0] for v in temp]), np.mean([
                 v[1] for v in temp]), np.mean([v[2] for v in temp])
             new_Mu.append([R_new, G_new, B_new])
+        # pprint(new_Mu)
 
         # Update Mu
-        if new_Mu == Mu:
+        if np.array_equal(Mu, new_Mu):
             break
         Mu = deepcopy(new_Mu)
     print(f' Final Centroids for {K} clusters : \n', Mu)
@@ -188,7 +192,10 @@ if __name__ == '__main__':
     K = [(3, 'task3_baboon_3.jpg'), (5, 'task3_baboon_5.jpg'),
          (10, 'task3_baboon_10.jpg'), (20, 'task3_baboon_20.jpg')]
 
+    # K = [(20, 't_task3_baboon_20.jpg')]
+
     for k in K:
+        # kmeans_quantization_alt(img, k[0], k[1])
         kmeans_quantization(img, k[0], k[1])
 
     # Part 5 GMM , import from another file and run here
