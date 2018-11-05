@@ -112,23 +112,22 @@ def _draw_inlier_match_keypoints(img1_g, keypoint_1, img2_g, keypoint_2, good_ma
 
 
 def _draw_stitched_image(img1, img2, H_Matrix):
-    """
+    """Warp and stitch 2 images using Homography matrix as perspective reference
     """
 
     # Get width and height of input images
-    width1, height1 = img1.shape
-    width2, height2 = img2.shape
+    (w1, h1), (w2, h2) = img1.shape, img2.shape
+    # w2, h2 = img2.shape
 
     # Get the canvas dimesions
     img1_dims = np.float32(
-        [[0, 0], [0, width1], [height1, width1], [height1, 0]]).reshape(-1, 1, 2)
-    img2_dims = np.float32(
-        [[0, 0], [0, width2], [height2, width2], [height2, 0]]).reshape(-1, 1, 2)
+        [[0, 0], [0, w1], [h1, w1], [h1, 0]]).reshape(-1, 1, 2)
 
-    # Get relative perspective of second image
-    img2_dims = cv.perspectiveTransform(img2_dims, H_Matrix)
+    # Get relative perspective of second image with first image
+    img2_dims = cv.perspectiveTransform(np.float32(
+        [[0, 0], [0, w2], [h2, w2], [h2, 0]]).reshape(-1, 1, 2), H_Matrix)
 
-    # Resulting dimensions
+    # Append Dimensions
     result_dims = np.concatenate((img1_dims, img2_dims), axis=0)
 
     # Getting images together
@@ -136,18 +135,17 @@ def _draw_stitched_image(img1, img2, H_Matrix):
     [x_min, y_min] = np.int32(result_dims.min(axis=0).ravel() - 0.5)
     [x_max, y_max] = np.int32(result_dims.max(axis=0).ravel() + 0.5)
 
-    # Create output array after affine transformation
-    transform_dist = [-x_min, -y_min]
-    transform_array = np.array([[1, 0, transform_dist[0]],
-                                [0, 1, transform_dist[1]],
-                                [0, 0, 1]])
+    # Affine transformation
+    transformation = np.array([[1, 0, -x_min],
+                               [0, 1, -y_min],
+                               [0, 0, 1]])
 
     # Warp images to get the resulting image
-    result_img = cv.warpPerspective(img2, transform_array.dot(H_Matrix),
-                                    (x_max-x_min, y_max-y_min))
-    result_img[transform_dist[1]:width1+transform_dist[1],
-               transform_dist[0]:height1+transform_dist[0]] = img1
-    _save('task1_pano.jpg', result_img)
+    res = cv.warpPerspective(img2, transformation.dot(H_Matrix),
+                             (x_max-x_min, y_max-y_min))
+    res[-y_min:w1+-y_min,
+        -x_min:h1+-x_min] = img1
+    _save('task1_pano.jpg', res)
 
 
 if __name__ == '__main__':
