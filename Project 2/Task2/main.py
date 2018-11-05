@@ -135,7 +135,7 @@ def _draw_inlier_matches(img1_g, img2_g, mask, fundamental, src_pts, dst_pts):
     img3, img4 = drawlines(img2_g, img1_g, lines2,
                            src_pts, dest_pts, random_col_list)
     _save('task2_epi_right.jpg', img3)
-    _save('task2_epi_left.jpg', img3)
+    _save('task2_epi_left.jpg', img5)
 
 def _draw_disparity_map(img1, img2):
     """
