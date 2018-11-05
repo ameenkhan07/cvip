@@ -14,3 +14,8 @@ pip3 install matplotlib
 pip3 install scipy
 pip3 install opencv-python==3.4.2.16 opencv-contrib-python==3.4.2.16
 ```
+
+
+### Outputs
+- All the outputs for tasks 1, 2, and 3 can be found inside 'outputs' dir within the Task* dir.
+For eg, task1 sift1.jpg can be found inside Task1/outputs/task1 sift1.jpg
