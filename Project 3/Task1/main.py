@@ -54,16 +54,33 @@ def _erode(img, str_img=[]):
                 res[i][j] = 255
     return(np.asarray(res))
 
+def opening(img, str_img):
+    """
+    """
+    res = _erode(img, str_img)
+    res = _dilate(res, str_img)
+    return res
+
+def closing(img, str_img):
+    """
+    """
+    res = _dilate(img, str_img)
+    res = _erode(res, str_img)
+    return res
 
 if __name__ == '__main__':
     img = cv.imread(img_name, 0)
 
     str_img = np.asarray([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
 
-    res1 = _dilate(img, str_img)
-    _save('dilate.png', res1)
+    # res1 = _dilate(img, str_img)
+    # _save('dilate.png', res1)
+    # res2 = _erode(img, str_img)
+    # _save('erode.png', res2)
+    # print(res1.shape, res2.shape)
 
-    res2 = _erode(img, str_img)
-    _save('erode.png', res2)
-
+    res1 = opening(img, str_img)
+    _save('opening.png', res1)
+    res2 = closing(img, str_img)
+    _save('closing.png', res2)
     print(res1.shape, res2.shape)
