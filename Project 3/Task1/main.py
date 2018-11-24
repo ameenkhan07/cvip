@@ -17,7 +17,7 @@ def _save(filename, img):
 
 
 def _dilate(img, str_img=[]):
-    '''
+    '''Expands the poindary of img
     '''
     w, h = img.shape
 
@@ -34,13 +34,36 @@ def _dilate(img, str_img=[]):
 
     return(np.asarray(res))
 
+
+def _erode(img, str_img=[]):
+    '''Contracts the boundary of img
+    '''
+    w, h = img.shape
+    se_w, se_h = str_img.shape
+    res = [[0 for _ in range(h)] for _ in range(w)]
+    for i, im_row in enumerate(img):
+        for j, im_ele in enumerate(im_row):
+            flag = True
+            for k, str_row in enumerate(str_img):
+                for l, str_ele in enumerate(str_row):
+                    if (i+k >= w) or (j+l >= h):
+                        continue
+                    if str_ele != 0 and img[i+k][j+l] == 0:
+                        flag = False
+            if flag:
+                res[i][j] = 255
+    return(np.asarray(res))
+
+
 if __name__ == '__main__':
     img = cv.imread(img_name, 0)
-    
-    str_img = np.asarray([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
-    # print(img.shape, str_img.shape)
 
-    res = _dilate(img, str_img)
-    # print(res.shape)
-    _save('temp.png', res)
-    
+    str_img = np.asarray([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
+
+    res1 = _dilate(img, str_img)
+    _save('dilate.png', res1)
+
+    res2 = _erode(img, str_img)
+    _save('erode.png', res2)
+
+    print(res1.shape, res2.shape)
