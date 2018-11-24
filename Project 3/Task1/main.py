@@ -73,14 +73,25 @@ if __name__ == '__main__':
 
     str_img = np.asarray([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
 
-    # res1 = _dilate(img, str_img)
-    # _save('dilate.png', res1)
-    # res2 = _erode(img, str_img)
-    # _save('erode.png', res2)
-    # print(res1.shape, res2.shape)
+    res1 = _dilate(img, str_img)
+    _save('dilate.png', res1)
+    res2 = _erode(img, str_img)
+    _save('erode.png', res2)
+    print(res1.shape, res2.shape)
 
     res1 = opening(img, str_img)
     _save('opening.png', res1)
     res2 = closing(img, str_img)
     _save('closing.png', res2)
     print(res1.shape, res2.shape)
+
+    # Denoising
+    # Approach 1 : Opening then Closing
+    temp1 = opening(img, str_img)
+    res1 = closing(temp1, str_img)
+    _save('res_noise1.png', res1)
+
+    # Approach 1 : Closing then Opening
+    temp2 = closing(img, str_img)
+    res2 = opening(temp2, str_img)
+    _save('res_noise2.png', res2)
