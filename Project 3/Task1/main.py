@@ -61,7 +61,8 @@ class MorphImageProcessing:
     def opening(self, img=[], str_img=[]):
         """Morph Composite operation, first erode then dilate
         """
-        if not len(img): img = self.img
+        if not len(img):
+            img = self.img
         res = self._erode(img, self.str_img)
         res = self._dilate(res, str_img)
         return res
@@ -69,7 +70,8 @@ class MorphImageProcessing:
     def closing(self, img=[], str_img=[]):
         """Morph Composite operation, first dilute then erode
         """
-        if not len(img): img = self.img
+        if not len(img):
+            img = self.img
         res = self._dilate(img, self.str_img)
         res = self._erode(res, self.str_img)
         return res
