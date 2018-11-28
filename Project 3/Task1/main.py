@@ -25,37 +25,38 @@ class MorphImageProcessing:
         '''Expands the poindary of img
         '''
         w, h = img.shape
-
-        res = [[0 for _ in range(h)] for _ in range(w)]
+        res = np.asarray([[0 for _ in range(h)] for _ in range(w)])
+        # Iterating the anchor of the structure image over the original image
         for i, im_row in enumerate(img):
             for j, im_ele in enumerate(im_row):
-                if im_ele:
-                    for k, str_row in enumerate(str_img):
-                        for l, str_ele in enumerate(str_row):
-                            if (i+k >= w) or (j+l >= h):
+                if img[i][j]:
+                    for k in range(-1, 2):
+                        for l in range(-1, 2):
+                            if (i+k) >= w or (i+k) < 0 or (l+j) >= h or (l+j) < 0:
                                 continue
-                            if str_ele:
+                            else:
                                 res[i+k][j+l] = 255
 
-        return(np.asarray(res))
+        return(res)
 
     def _erode(self, img, str_img=[]):
         '''Contracts the boundary of img
         '''
         w, h = img.shape
         se_w, se_h = str_img.shape
-        res = [[0 for _ in range(h)] for _ in range(w)]
+        res = np.asarray([[0 for _ in range(h)] for _ in range(w)])
         for i, im_row in enumerate(img):
             for j, im_ele in enumerate(im_row):
                 flag = True
-                for k, str_row in enumerate(str_img):
-                    for l, str_ele in enumerate(str_row):
-                        if (i+k >= w) or (j+l >= h):
+                for k in range(-1, 2):
+                    for l in range(-1, 2):
+                        if (i+k) >= w or (i+k) < 0 or (l+j) >= h or (l+j) < 0:
                             continue
-                        if str_ele != 0 and img[i+k][j+l] == 0:
+                        if str_img[k][l] != 0 and img[i+k][j+l] == 0:
                             flag = False
                 if flag:
                     res[i][j] = 255
+
         return(np.asarray(res))
 
     def opening(self, img=[], str_img=[]):
@@ -63,8 +64,8 @@ class MorphImageProcessing:
         """
         if not len(img):
             img = self.img
-        res = self._erode(img, self.str_img)
-        res = self._dilate(res, str_img)
+        temp = self._erode(img, self.str_img)
+        res = self._dilate(temp, str_img)
         return res
 
     def closing(self, img=[], str_img=[]):
@@ -72,8 +73,8 @@ class MorphImageProcessing:
         """
         if not len(img):
             img = self.img
-        res = self._dilate(img, self.str_img)
-        res = self._erode(res, self.str_img)
+        temp = self._dilate(img, self.str_img)
+        res = self._erode(temp, self.str_img)
         return res
 
 
@@ -91,9 +92,19 @@ if __name__ == '__main__':
     Morph._save('res_noise1.png', res1)
     print('\nres_noise1.png saved!!')
 
-    # Approach 1 : Closing then Opening
+    # Approach 2 : Closing then Opening
     print(f'\nApproach 2 : Closing followed by Opening morph operations')
     temp2 = Morph.closing(img, str_img)
     res2 = Morph.opening(temp2, str_img)
     Morph._save('res_noise2.png', res2)
     print('\nres_noise2.png saved!!')
+
+    # Boundary Extraction
+
+    print(f'\nBoundary of Approach 1')
+    boundary1 = np.subtract(res1, Morph._erode(res1, str_img))
+    Morph._save('res_bound1.png', boundary1)
+
+    print(f'\nBoundary of Approach 2')
+    boundary2 = np.subtract(res2, Morph._erode(res2, str_img))
+    Morph._save('res_bound2.png', boundary2)
