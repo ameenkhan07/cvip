@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 import numpy as np
 import os
-# import math
 from sobel import sobel
 
 OUTPUT_DIR = "outputs/"
@@ -152,9 +151,10 @@ if __name__ == '__main__':
                     sin=_sin, cos=_cos, ang=55, filename='blue_line.jpg')
     print('Detected Diagonal Lines drawn')
 
+
     # Part C : Detecting Circles
 
-    rad_min, rad_max = 15, 30  # Range of radius of the coins, assumed
+    rad_min, rad_max = 20, 30  # Range of radius of the coins, assumed
     # Accumulator Voting Matrix for Circles
     circle_acc_mat = get_hough_transform_circles_acc(
         edges, diag_len, rad_max, rad_min)

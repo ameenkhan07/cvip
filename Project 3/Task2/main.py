@@ -35,7 +35,7 @@ def _point_detection(img, mask, thresh):
 
     # Save Images after pask and thresholding
     _save('masked_image.jpg', res)
-    _save('point_detection.jpg', res2)
+    _save('res_point.jpg', res2)
 
 
 def _save_histogram(img):
